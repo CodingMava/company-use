@@ -13,11 +13,20 @@ const chat_reply_protocol = [
   'Short progress notes while you work stay plain text. The final reply is never plain text as well.',
 ].join('\n');
 
-const reply_protocol_by_channel: Record<string, { text: string; steers_tools: readonly string[] }> =
-  {
-    slack: { text: slack_reply_protocol, steers_tools: ['slack-respond-1'] },
-    dashboard: { text: chat_reply_protocol, steers_tools: ['chat-respond-1'] },
-  };
+const whatsapp_reply_protocol = [
+  '## WhatsApp Reply Protocol',
+  'Your final message of this turn is sent to the person as a WhatsApp message, exactly as you write it. Progress notes you write while you work are not sent.',
+  'Write it like a message from a capable colleague on their phone: the answer first, in short paragraphs. No headings and no tables; use bold and lists sparingly.',
+  'WhatsApp lets you write to them only within 24 hours of their last message, so finish the work in this turn instead of promising to follow up later.',
+].join('\n');
+
+type ChannelReplyProtocol = { text: string; steers_tools?: readonly string[] };
+
+const reply_protocol_by_channel: Record<string, ChannelReplyProtocol> = {
+  slack: { text: slack_reply_protocol, steers_tools: ['slack-respond-1'] },
+  dashboard: { text: chat_reply_protocol, steers_tools: ['chat-respond-1'] },
+  whatsapp: { text: whatsapp_reply_protocol },
+};
 
 export function channel_reply_sections(channel: string | undefined) {
   const protocol = channel ? reply_protocol_by_channel[channel] : undefined;

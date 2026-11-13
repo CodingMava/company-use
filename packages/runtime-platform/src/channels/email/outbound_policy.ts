@@ -4,9 +4,19 @@ import { count_workspace_tool_calls_since } from '@coworker/core/db/queries/sess
 import { list_workspace_member_users } from '@coworker/core/db/queries/workspace_membership';
 import { read_trusted_email_turn_context } from '@runtime-platform/channels/email/event_payloads';
 import { read_email_thread_participants } from '@runtime-platform/channels/email/thread_participants';
+import { read_trusted_whatsapp_turn_context } from '@runtime-platform/channels/whatsapp/trusted_turn_context';
 import type { RuntimeToolSourceContext } from '@runtime-platform/tools/types';
 
 const member_authorized_source_types = new Set(['dashboard', 'slack']);
+const proven_member_readers: Record<
+  string,
+  (source_context?: RuntimeToolSourceContext) => boolean | undefined
+> = {
+  email: (source_context) =>
+    read_trusted_email_turn_context(source_context)?.sender_is_workspace_member,
+  whatsapp: (source_context) =>
+    read_trusted_whatsapp_turn_context(source_context)?.sender_is_workspace_member,
+};
 const capped_outbound_email_tool_names = ['email-send-1'];
 
 export type OutboundEmailAuthorization =
@@ -65,8 +75,7 @@ async function find_unauthorized_recipients(
 function turn_is_member_authorized(source_context?: RuntimeToolSourceContext) {
   const source_type = source_context?.source_type ?? 'dashboard';
   if (member_authorized_source_types.has(source_type)) return true;
-  if (source_type !== 'email') return false;
-  return read_trusted_email_turn_context(source_context)?.sender_is_workspace_member === true;
+  return proven_member_readers[source_type]?.(source_context) === true;
 }
 
 async function read_daily_send_cap_breach(

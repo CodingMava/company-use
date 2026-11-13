@@ -1,8 +1,10 @@
 import type { Database, event_jobs, events } from '@coworker/core';
+import { tool_policy_approval_wait_schema } from '@coworker/core/access/tool_policy_approval_schema';
 import type { get_session } from '@coworker/core/db/queries/sessions';
 import { start_slack_channel_turn } from '@runtime-platform/channels/slack/channel_turn';
 import { read_slack_resume_target } from '@runtime-platform/channels/slack/slack_session_target';
 import { find_active_slack_connection_for_workspace_team } from '@runtime-platform/channels/slack/workspace_connection';
+import { continue_the_whatsapp_turn_that_asked } from '@runtime-platform/channels/whatsapp/session_resume';
 import { hidden_session_resume_options } from '@runtime-platform/events/connection_resume_job';
 import {
   read_agent_run_job,
@@ -30,6 +32,14 @@ export async function continue_the_session(
   input: PolicyDecisionResumeInput,
   continuation: ContinuationInput,
 ) {
+  const whatsapp_run_id = await continue_the_whatsapp_turn_that_asked(input.db, {
+    workspace_id: input.workspace_id,
+    session: continuation.session,
+    asking_run_id: read_asking_run_id(input),
+    job_id: continuation.job_id,
+    job: read_agent_run_job(input),
+  });
+  if (whatsapp_run_id) return whatsapp_run_id;
   const slack = read_slack_resume_target(continuation.session);
   if (!slack) return continue_chat(input, continuation);
 
@@ -61,6 +71,13 @@ export async function continue_the_session(
   });
   if (!result.accepted) throw new Error(`The policy resume was rejected: ${result.code}`);
   return result.run_id;
+}
+
+function read_asking_run_id(input: PolicyDecisionResumeInput) {
+  const wait = tool_policy_approval_wait_schema.safeParse(
+    input.event_jobs[0]?.metadata.policy_approval,
+  );
+  return wait.success ? wait.data.source_run_id : undefined;
 }
 
 async function continue_chat(input: PolicyDecisionResumeInput, continuation: ContinuationInput) {

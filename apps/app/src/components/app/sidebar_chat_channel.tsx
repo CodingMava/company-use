@@ -1,5 +1,5 @@
 import { cn } from '@coworker/ui/lib/utils';
-import { Clock3, Code2, Cpu, Globe, Mail, MessageCircle } from 'lucide-react';
+import { Clock3, Code2, Cpu, Globe, Mail, MessageCircle, Smartphone } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { SlackGlyph } from '@/components/onboarding/slack/glyph';
 
@@ -8,6 +8,7 @@ const channels: Record<string, { label: string; icon: ComponentType<{ className?
   web: { label: 'Web', icon: WebChatIcon },
   slack: { label: 'Slack', icon: SlackGlyph },
   email: { label: 'Email', icon: Mail },
+  whatsapp: { label: 'WhatsApp', icon: Smartphone },
   scheduled_task: { label: 'Scheduled', icon: Clock3 },
   schedule: { label: 'Scheduled', icon: Clock3 },
   scheduler: { label: 'Scheduled', icon: Clock3 },

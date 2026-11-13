@@ -1,7 +1,15 @@
 import { automation_filter_fields } from '@runtime-platform/tools/definitions/automations_support';
 import { z } from 'zod';
 
-const session_sources = ['dashboard', 'slack', 'email', 'api', 'trigger', 'system'] as const;
+const session_sources = [
+  'dashboard',
+  'slack',
+  'email',
+  'whatsapp',
+  'api',
+  'trigger',
+  'system',
+] as const;
 
 const session_index_limit_maximum = 100;
 const session_message_limit_maximum = 50;

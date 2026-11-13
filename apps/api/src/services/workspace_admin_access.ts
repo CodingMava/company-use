@@ -74,6 +74,16 @@ export async function authorize_dev_settings_administration(
   });
 }
 
+export async function authorize_channel_administration(
+  db: Database,
+  input: { workspace_id: string; user_id: string },
+) {
+  await authorize_workspace_admin(db, input, {
+    code: 'channel_access_denied',
+    message: 'Only an owner or an admin can read or change channel routes.',
+  });
+}
+
 export async function authorize_channel_memory_audience_administration(
   db: Database,
   input: { workspace_id: string; user_id: string },

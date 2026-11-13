@@ -26,6 +26,7 @@ import { run_slack_member_sync_job } from '@runtime-platform/events/slack_member
 import { run_slack_workflow_proposal_job } from '@runtime-platform/events/slack_workflow_proposal_job';
 import { run_triage_signal_job } from '@runtime-platform/events/triage_signal_job';
 import { run_volume_snapshot_job } from '@runtime-platform/events/volume_snapshot_job';
+import { run_whatsapp_agent_message_job } from '@runtime-platform/events/whatsapp/agent_message_job';
 import {
   brain_chunk_embedding_job,
   brain_source_crawl_job,
@@ -44,6 +45,7 @@ const run_by_job_handler: Record<string, EventJobHandler['run']> = {
   api_session_turn_job: run_api_session_turn_job,
   slack_agent_message: run_slack_agent_message_job,
   email_agent_message: run_email_agent_message_job,
+  whatsapp_agent_message: run_whatsapp_agent_message_job,
   session_agent_message: run_session_agent_message_job,
   connection_resume: run_connection_resume_job,
   notification_answer: run_notification_answer_job,

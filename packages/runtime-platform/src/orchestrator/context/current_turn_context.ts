@@ -11,12 +11,17 @@ import {
   type SessionCurrentHeadlessContext,
   wall_clock_rule,
 } from '@runtime-platform/orchestrator/context/headless_turn_context';
+import {
+  format_current_whatsapp_context,
+  type SessionCurrentWhatsAppContext,
+} from '@runtime-platform/orchestrator/context/whatsapp_turn_context';
 
 export type { SessionCurrentHeadlessContext };
 
 export type SessionCurrentTurnContext = { chat_url?: string } & (
   | { source_type: 'slack'; slack: SessionCurrentSlackContext }
   | { source_type: 'email'; email: SessionCurrentEmailContext }
+  | { source_type: 'whatsapp'; whatsapp: SessionCurrentWhatsAppContext }
   | { source_type: 'web_chat'; web_chat: SessionCurrentWebChatContext }
   | { source_type: 'api'; api: SessionCurrentApiContext }
   | { source_type: 'headless'; headless: SessionCurrentHeadlessContext }
@@ -68,12 +73,14 @@ export function format_current_turn_context(context?: SessionCurrentTurnContext)
 const human_turn_source_types = new Set<SessionCurrentTurnContext['source_type']>([
   'slack',
   'email',
+  'whatsapp',
   'web_chat',
 ]);
 
 function format_current_turn_source(context: SessionCurrentTurnContext) {
   if (context.source_type === 'slack') return format_current_slack_context(context.slack);
   if (context.source_type === 'email') return format_current_email_context(context.email);
+  if (context.source_type === 'whatsapp') return format_current_whatsapp_context(context.whatsapp);
   if (context.source_type === 'web_chat') return format_current_web_chat_context(context.web_chat);
   if (context.source_type === 'api') return format_current_api_context(context.api);
   if (context.source_type === 'headless') return format_current_headless_context(context.headless);

@@ -17,7 +17,14 @@ import {
 import type { RuntimeAttachmentSource } from '@runtime-platform/attachments/runtime_attachment_source';
 import type { z } from 'zod';
 
-export type RuntimeToolSourceType = 'dashboard' | 'slack' | 'email' | 'api' | 'runtime' | 'tool';
+export type RuntimeToolSourceType =
+  | 'dashboard'
+  | 'slack'
+  | 'email'
+  | 'whatsapp'
+  | 'api'
+  | 'runtime'
+  | 'tool';
 
 type RuntimeToolSlackSourceMetadata = {
   connection_id?: string;
@@ -45,6 +52,7 @@ export type RuntimeToolSourceMetadata = Record<string, unknown> & {
   source_actor?: SourceActor & { external_user_id?: string };
   slack?: RuntimeToolSlackSourceMetadata;
   email?: RuntimeToolEmailSourceMetadata;
+  whatsapp?: RuntimeToolWhatsAppSourceMetadata;
   [agent_heartbeat_config_key]?: ScoutSourceData;
   delegated_authority?: ScheduledTaskAuthorityData;
   local_timezone?: string;
@@ -62,6 +70,16 @@ type RuntimeToolEmailSourceMetadata = {
   subject?: string | undefined;
   message_id?: string | undefined;
   references?: string[] | undefined;
+};
+
+type RuntimeToolWhatsAppSourceMetadata = {
+  phone_number_id?: string | undefined;
+  display_phone_number?: string | undefined;
+  sender_key?: string | undefined;
+  sender_wa_id?: string | undefined;
+  sender_user_id?: string | undefined;
+  sender_is_workspace_member?: boolean | undefined;
+  message_ids?: string[] | undefined;
 };
 
 export type RuntimeToolSourceContext = {

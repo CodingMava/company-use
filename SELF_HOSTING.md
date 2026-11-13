@@ -930,6 +930,7 @@ Each way to reach outside apps is its own switch:
 | A native connector (Notion, HubSpot, Salesforce, GitHub, Attio, Slack) | That app's own OAuth client: `CONNECTOR_<APP>_CLIENT_ID` and `CONNECTOR_<APP>_CLIENT_SECRET` | No |
 | Alfera inside your Slack | A Slack app made from `deploy/slack-app-manifest.json` (first replace `YOUR-API-PUBLIC-URL` in it with your public API address), the three `SLACK_*` values, and `API_PUBLIC_URL`. See [Alfera inside your Slack](#alfera-inside-your-slack). | Yes |
 | Alfera by email | `RESEND_API_KEY`, `INBOUND_EMAIL_DOMAIN`, `RESEND_INBOUND_WEBHOOK_SECRET`. See [Alfera by email](#alfera-by-email). | Yes |
+| Alfera on WhatsApp | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, and one route for the number. See [Alfera on WhatsApp](#alfera-on-whatsapp). | Yes |
 | Web search in research tasks | One of `TAVILY_API_KEY`, `BRAVE_SEARCH_API_KEY`, `FIRECRAWL_API_KEY` | No |
 
 `./alfera add apps` asks for the key and loads the catalogue. By hand, set the key in `.env`,
@@ -972,6 +973,84 @@ install when a mail comes in.
 3. Reload the dashboard. `./alfera doctor` says so when email is half set up.
 
 The API refuses a mail whose signature does not match the secret.
+
+### Alfera on WhatsApp
+
+Your team, and if you want your customers, write to your coworker on WhatsApp, and it answers
+in the same chat. It needs a business number on Meta's WhatsApp Cloud API and a public
+`https://` address for the API, because Meta calls your install when a message comes in.
+
+1. In [Meta for Developers](https://developers.facebook.com), create an app and add the
+   WhatsApp product. Note the phone number ID of your business number, a permanent access
+   token (a system user token with `whatsapp_business_messaging`), and the app secret, under
+   App settings, then Basic.
+2. Set these in `.env`, then restart. The verify token is any long random string you choose.
+
+   ```bash
+   WHATSAPP_ACCESS_TOKEN=
+   WHATSAPP_APP_SECRET=
+   WHATSAPP_VERIFY_TOKEN=
+   ```
+
+3. In the app, under WhatsApp, then Configuration, set the callback URL to
+   `/v1/channels/whatsapp/events` at the public address of the API, enter the same verify
+   token, and subscribe to the `messages` field.
+4. Tell the install which workspace answers the number, and which phone numbers belong to
+   which teammate. Only an owner or an admin can, and there is no settings screen for it yet:
+   sign in to the dashboard as an owner or admin, open the browser's developer console on that
+   page, and run:
+
+   ```js
+   await fetch('/api/v1/channels', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       channel_provider_key: 'whatsapp',
+       external_account_id: '<phone number ID>',
+       channel_config: {
+         member_phone_numbers: { '+39 333 123 4567': 'giulia@acme.com' },
+         answer_outside_senders: false,
+       },
+     }),
+   }).then((response) => response.json());
+   ```
+
+   Write each number with its country code, the way WhatsApp reports it. For a few countries
+   that differs from the number you dial: a Mexican mobile arrives as `521` and ten digits, and
+   an older Brazilian mobile can arrive without the `9` after the area code. When a listed
+   teammate gets no answer, the API log line `whatsapp turn was not started` shows the number
+   WhatsApp sent and why it did not match.
+
+   Each email must belong to a member of the workspace. On an install that signs in with links
+   (the self-host default), use the address the teammate entered under Settings, then Profile,
+   in "Your email in Slack and in mail".
+
+   To change the list later, send the whole new `channel_config` to
+   `PATCH /api/v1/channels/<channel_id>`; the first call's answer holds the `channel_id`. A
+   second route for the same number is refused, and settings with a typo are refused with the
+   name of the field.
+5. Send the number a message from a phone you listed.
+
+A listed phone speaks as that teammate, with the same authority the teammate has in the
+dashboard. Any other phone gets no answer, unless `answer_outside_senders` is `true`: then the
+coworker answers it the way the company answers a customer, never takes its messages as
+instructions from your team, and does not act outside the workspace for it. Someone who hides
+their number behind a WhatsApp username counts as an outside sender. When a step needs an
+approval, the person gets a short note, and a teammate's note links to the page where it
+waits. The answer follows in the chat once someone decides, if that happens within 24 hours.
+Emoji reactions start nothing. The API refuses a message whose signature does not match the
+app secret.
+
+What it does not do yet:
+
+- It reads text, button taps and shared locations. For a photo, a voice note or a file, it
+  tells the sender it cannot open it yet.
+- WhatsApp lets a business write only within 24 hours of the person's last message. An
+  answer that waits longer than that on an approval is not delivered, and the API log shows
+  the failed delivery.
+- When a step waits for someone to connect an app, the answer after connecting shows in the
+  dashboard, not in WhatsApp.
+- One access token serves the whole install, so one Meta app holds every business number.
 
 ### An MCP server on this machine or on your own network
 

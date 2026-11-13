@@ -2,12 +2,13 @@ import type { ApiEnv } from '@api/lib/context';
 import { ok } from '@api/lib/response';
 import { validate_json } from '@api/lib/validate';
 import {
-  create_channel,
-  list_channels,
-  update_channel_status,
-} from '@coworker/core/db/queries/channels';
+  change_channel_route,
+  create_channel_route,
+  list_channel_routes,
+} from '@api/services/channel_routes';
+import { authorize_channel_administration } from '@api/services/workspace_admin_access';
 import { ValidationError } from '@coworker/shared';
-import { Hono } from 'hono';
+import { type Context, Hono } from 'hono';
 import { z } from 'zod';
 
 const channel_object_schema = z.record(z.string(), z.unknown());
@@ -29,21 +30,28 @@ const create_channel_schema = z.object({
   metadata: channel_object_schema.optional(),
 });
 
-const update_channel_schema = z.object({
-  channel_status: z.enum(['enabled', 'disabled', 'error']),
-});
+const update_channel_schema = z
+  .object({
+    channel_status: z.enum(['enabled', 'disabled', 'error']).optional(),
+    channel_config: channel_object_schema.optional(),
+  })
+  .refine((body) => body.channel_status !== undefined || body.channel_config !== undefined, {
+    message: 'Send channel_status, channel_config, or both.',
+  });
 
 export const channel_config_routes = new Hono<ApiEnv>();
 
 channel_config_routes.get('/v1/channels', async (c) => {
-  return c.json(ok(await list_channels(c.get('db'), c.get('workspace_id'))));
+  await authorize_channel_administration(c.get('db'), request_actor(c));
+  return c.json(ok(await list_channel_routes(c.get('db'), c.get('workspace_id'))));
 });
 
 channel_config_routes.post('/v1/channels', validate_json(create_channel_schema), async (c) => {
   const body = c.req.valid('json');
+  await authorize_channel_administration(c.get('db'), request_actor(c));
   const target_kind = body.target_kind ?? 'agent';
   const target_id = body.target_id ?? default_channel_target_id(target_kind, c.get('agent_id'));
-  const channel = await create_channel(c.get('db'), {
+  const channel = await create_channel_route(c.get('db'), {
     workspace_id: c.get('workspace_id'),
     channel_provider_key: body.channel_provider_key,
     target_kind,
@@ -76,16 +84,22 @@ channel_config_routes.patch(
   validate_json(update_channel_schema),
   async (c) => {
     const body = c.req.valid('json');
-    const channel = await update_channel_status(c.get('db'), {
+    await authorize_channel_administration(c.get('db'), request_actor(c));
+    const channel = await change_channel_route(c.get('db'), {
       workspace_id: c.get('workspace_id'),
       channel_id: c.req.param('channel_id'),
       channel_status: body.channel_status,
+      channel_config: body.channel_config,
       actor_id: c.get('user_id'),
     });
 
     return c.json(ok(channel));
   },
 );
+
+function request_actor(c: Context<ApiEnv>) {
+  return { workspace_id: c.get('workspace_id'), user_id: c.get('user_id') };
+}
 
 function default_channel_target_id(target_kind: string, agent_id: string) {
   if (target_kind === 'agent') return agent_id;

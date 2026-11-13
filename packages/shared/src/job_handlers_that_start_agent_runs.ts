@@ -4,6 +4,7 @@ import { session_agent_message_job_handler } from '@shared/session_message_queue
 export const job_handlers_that_start_agent_runs = [
   'slack_agent_message',
   'email_agent_message',
+  'whatsapp_agent_message',
   'run_scheduled_agent_task',
   'run_automation',
   agent_heartbeat_job_handler,

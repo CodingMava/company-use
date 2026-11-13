@@ -1,6 +1,6 @@
 import type { SessionMetadata } from '@coworker/core/db/schema/json_column_types';
 
-type ChannelSource = 'slack' | 'email';
+type ChannelSource = 'slack' | 'email' | 'whatsapp';
 export type SessionSource = 'dashboard' | ChannelSource | 'api' | 'trigger' | 'system';
 export type RunMessageSource = 'dashboard' | ChannelSource | 'api' | 'runtime' | 'tool';
 

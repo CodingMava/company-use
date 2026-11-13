@@ -1165,7 +1165,6 @@
       "apps/api/src/routes/automations.ts": 2,
       "apps/api/src/routes/brain/mcp_tools.ts": 1,
       "apps/api/src/routes/catalog.ts": 4,
-      "apps/api/src/routes/channels/configs.ts": 3,
       "apps/api/src/routes/choices.ts": 3,
       "apps/api/src/routes/connection_credentials.ts": 2,
       "apps/api/src/routes/connections.ts": 11,

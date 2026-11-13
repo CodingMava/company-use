@@ -15,13 +15,13 @@ export async function resolve_chat_speaker(
 ): Promise<{ source_actor_id: string; name: string; email?: string } | undefined> {
   try {
     const sender = get_source_actor_identity(input.source_metadata);
-    if (sender?.user_id && sender.name) {
+    if (sender?.user_id && sender.name && sender.provider_key) {
       const actor = await upsert_source_actor(db, {
         workspace_id: input.workspace_id,
-        provider: 'slack',
+        provider: sender.provider_key,
         external_id: sender.user_id,
         display_name: sender.name,
-        ...(sender.email ? { email: sender.email } : {}),
+        email: sender.email ?? null,
         actor_id: input.actor_id,
       });
       return {

@@ -28,6 +28,7 @@ function build_current_turn_source_context(
 ): SessionCurrentTurnContext | undefined {
   if (input.source_type === 'slack') return build_slack_current_turn_context(input);
   if (input.source_type === 'email') return build_email_current_turn_context(input);
+  if (input.source_type === 'whatsapp') return build_whatsapp_current_turn_context(input);
   if (input.source_type === 'api') return build_api_current_turn_context(input);
   if (input.source_type === undefined || input.source_type === 'dashboard') {
     const sender = get_source_actor_identity(input.user_message_source_metadata);
@@ -74,6 +75,25 @@ function build_email_current_turn_context(
         : {}),
       ...(email.subject ? { subject: email.subject } : {}),
       ...(reply_recipients.length ? { reply_recipients } : {}),
+    },
+  };
+}
+
+function build_whatsapp_current_turn_context(
+  input: CurrentTurnInput,
+): SessionCurrentTurnContext | undefined {
+  const whatsapp = input.user_message_source_metadata?.whatsapp;
+  if (!whatsapp) return undefined;
+
+  const sender = get_source_actor_identity(input.user_message_source_metadata);
+  return {
+    source_type: 'whatsapp',
+    whatsapp: {
+      ...(whatsapp.display_phone_number ? { business_phone: whatsapp.display_phone_number } : {}),
+      ...(sender?.name ? { speaker_name: sender.name } : {}),
+      ...(sender?.email ? { speaker_email: sender.email } : {}),
+      ...(whatsapp.sender_wa_id ? { speaker_phone: `+${whatsapp.sender_wa_id}` } : {}),
+      sender_is_workspace_member: whatsapp.sender_is_workspace_member === true,
     },
   };
 }
@@ -125,9 +145,11 @@ export function get_source_actor_identity(source_metadata?: RuntimeToolSourceMet
   const actor = source_metadata?.source_actor;
   if (!actor) return null;
   const profile = actor.profile;
-  const user_id = actor.external_user_id ?? actor.external_ids[0]?.external_user_id;
+  const external_id = actor.external_ids[0];
+  const user_id = actor.external_user_id ?? external_id?.external_user_id;
   return {
     user_id,
+    provider_key: external_id?.provider_key,
     name: profile.real_name ?? profile.display_name ?? undefined,
     email: profile.email ?? undefined,
     timezone: profile.timezone ?? undefined,

@@ -11,4 +11,11 @@ export const integration_env_schema = {
   COMPOSIO_API_KEY: z.string().optional(),
   COMPOSIO_WEBHOOK_SECRET: z.string().optional(),
   MCP_OAUTH_ISSUER: z.string().url().optional(),
+  WHATSAPP_ACCESS_TOKEN: z.string().optional(),
+  WHATSAPP_APP_SECRET: z.string().optional(),
+  WHATSAPP_VERIFY_TOKEN: z.string().optional(),
+  WHATSAPP_GRAPH_API_VERSION: z
+    .string()
+    .regex(/^v\d+\.\d+$/u)
+    .default('v25.0'),
 };

@@ -33,7 +33,7 @@ export async function upsert_source_actor(db: Database, input: UpsertSourceActor
       targetWhere: sql`${source_actors.provider} is not null and ${source_actors.external_id} is not null`,
       set: {
         display_name: input.display_name ?? sql`${source_actors.display_name}`,
-        email: input.email ?? sql`${source_actors.email}`,
+        email: input.email === undefined ? sql`${source_actors.email}` : input.email,
         last_updated_by: input.actor_id,
         last_updated_time: new Date(),
       },

@@ -8,6 +8,7 @@ export * from '@runtime-platform/attachments/write_attachment_to_environment';
 export * from '@runtime-platform/automations/automation_subject';
 export * from '@runtime-platform/channels/channel_ingress';
 export * from '@runtime-platform/channels/channel_ingress_adapters';
+export * from '@runtime-platform/channels/channel_route_rules';
 export * from '@runtime-platform/channels/email/address_lifecycle';
 export * from '@runtime-platform/channels/email/inbound_address';
 export * from '@runtime-platform/channels/exclusive_external_account_claims';
